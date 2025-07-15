@@ -5,9 +5,10 @@ from selenium.webdriver.common.by import By
 from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 import time
-import csv
 import random
 import os
+import pandas as pd  # nuova libreria
+
 def wait_random():
     time.sleep(random.uniform(2.5, 4.5))
 
@@ -64,11 +65,9 @@ options.add_argument(
     "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36")
 driver = webdriver.Chrome(service=ChromeService(ChromeDriverManager().install()), options=options)
 
-output_file = "falstaff_restaurants.csv"
-if not os.path.exists(output_file):
-    with open(output_file, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["Nome", "Indirizzo", "Telefono", "Email", "Sito Web"])
+output_file_excel = "falstaff_restaurants.xlsx"
+
+dati = []  # lista per raccogliere i dati
 
 page = 1
 totale = 0
@@ -104,9 +103,7 @@ while True:
             email = estrai_email(sp)
             sito = estrai_sito(sp)
 
-            with open(output_file, "a", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                writer.writerow([nome, indirizzo, telefono, email, sito])
+            dati.append([nome, indirizzo, telefono, email, sito, link])
             totale += 1
             print(f"✓ {totale} | {nome}")
 
@@ -117,4 +114,10 @@ while True:
     page += 1
 
 driver.quit()
+
+# crea DataFrame e esporta in excel
+df = pd.DataFrame(dati, columns=["Nome", "Indirizzo", "Telefono", "Email", "Sito Web", "Link"])
+df.to_excel(output_file_excel, index=False)
+
 print(f"✅ Scraping completato. Totale ristoranti: {totale}")
+print(f"File Excel salvato come: {output_file_excel}")
